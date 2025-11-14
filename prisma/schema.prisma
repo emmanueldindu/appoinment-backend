@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  password         String
+  name             String
+  role             Role      @default(PATIENT)
+  gender           Gender?
+  specialty        Specialty?
+  bio              String?
+  hospital         String?
+  experience       String?
+  phone            String?
+  dateOfBirth      DateTime?
+  address          String?
+  bloodGroup       String?
+  allergies        String?
+  licenseNumber    String?
+  consultationFee  String?
+  education        String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  patientAppointments Appointment[] @relation("PatientAppointments")
+  doctorAppointments  Appointment[] @relation("DoctorAppointments")
+  availability        Availability[]
+  sentMessages        Message[]     @relation("SentMessages")
+  receivedMessages    Message[]     @relation("ReceivedMessages")
+
+  @@map("users")
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  duration    Int      // in minutes
+  price       Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("services")
+}
+
+model Appointment {
+  id            String            @id @default(uuid())
+  patientId     String
+  doctorId      String
+  appointmentDate DateTime
+  appointmentTime String          // e.g., "09:00 AM"
+  status        AppointmentStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  patient User @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor  User @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([appointmentDate])
+  @@map("appointments")
+}
+
+model Availability {
+  id        String   @id @default(uuid())
+  userId    String
+  dayOfWeek Int      // 0 = Sunday, 6 = Saturday
+  timeSlot  String   // e.g., "09:00 AM"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dayOfWeek, timeSlot])
+  @@index([userId])
+  @@map("availability")
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Specialty {
+  CARDIOLOGIST
+  DERMATOLOGIST
+  PEDIATRICIAN
+  NEUROLOGIST
+  ORTHOPEDIC
+  PSYCHIATRIST
+  GENERAL_PHYSICIAN
+  GYNECOLOGIST
+  OPHTHALMOLOGIST
+  ENT_SPECIALIST
+  DENTIST
+  OTHER
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  message    String   @db.Text
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+  @@map("messages")
+}
