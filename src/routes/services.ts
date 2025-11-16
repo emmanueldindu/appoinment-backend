@@ -13,7 +13,7 @@ const createServiceSchema = z.object({
 });
 
 // Get all active services (public)
-serviceRouter.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
+serviceRouter.get('/', async (_req: AuthRequest, res: Response): Promise<void> => {
   try {
     const services = await prisma.service.findMany({
       where: { isActive: true },
