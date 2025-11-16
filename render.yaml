@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: appointment-backend
+    env: node
+    region: oregon # Change to your preferred region: oregon, frankfurt, singapore, etc.
+    plan: free
+    buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5050
+      - key: DATABASE_URL
+        sync: false # You'll add this manually from Vercel Postgres
+      - key: JWT_SECRET
+        generateValue: true # Render will auto-generate a secure value
+      - key: FRONTEND_URL
+        sync: false # You'll add this after deploying frontend
