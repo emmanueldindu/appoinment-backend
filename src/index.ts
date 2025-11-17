@@ -80,8 +80,10 @@ io.on('connection', (socket) => {
   socket.join(userId);
 
   // Handle sending messages
-  socket.on('message:send', (data: { receiverId: string; message: string }) => {
-    const { receiverId, message } = data;
+  socket.on('message:send', (data: { receiverId: string; message: string; timestamp?: string; id?: string }) => {
+    const { receiverId, message, timestamp, id } = data;
+    
+    console.log(`📤 Message from ${userId} to ${receiverId}:`, { message, id });
     
     // Emit to receiver if online
     const receiverSocketId = onlineUsers.get(receiverId);
@@ -89,8 +91,12 @@ io.on('connection', (socket) => {
       io.to(receiverSocketId).emit('message:receive', {
         senderId: userId,
         message,
-        timestamp: new Date().toISOString()
+        timestamp: timestamp || new Date().toISOString(),
+        id: id || Date.now().toString()
       });
+      console.log(`✅ Message delivered to ${receiverId}`);
+    } else {
+      console.log(`⚠️ Receiver ${receiverId} is offline`);
     }
   });
 
